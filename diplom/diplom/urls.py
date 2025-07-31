@@ -20,7 +20,7 @@ from photo.views import PostViewSet,CommentViewSet,LikeView
 from rest_framework.routers import SimpleRouter
 
 router = SimpleRouter()
-router.register('post',PostViewSet,basename='post')
+router.register('post', PostViewSet, basename='post')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
