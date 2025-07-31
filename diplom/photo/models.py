@@ -37,21 +37,14 @@ class Post(models.Model):
     )
 
     def _geocode(self, geocoder_func, *args, **kwargs):
-        """Общая функция для геокодирования с повторами"""
-        retries = 3
-        delay = 1
-        for attempt in range(retries):
-            try:
-                return geocoder_func(*args, **kwargs)
-            except (GeocoderUnavailable, GeocoderTimedOut) as e:
-                if attempt < retries - 1:
-                    time.sleep(delay)
-                    continue
-                logger.error(f"Geocoding failed after {retries} attempts: {e}")
+
+        try:
+            return geocoder_func(*args, **kwargs)
+        except (GeocoderUnavailable, GeocoderTimedOut) as e:
+            logger.error(f"Geocoding failed after  attempts: {e}")
         return None
 
     def geocode_location(self):
-        """Прямое геокодирование: строка -> координаты"""
         if not self.location_query:
             return
         geolocator = Nominatim(user_agent="social_network")
@@ -60,9 +53,8 @@ class Post(models.Model):
         if location:
             self.latitude = location.latitude
             self.longitude = location.longitude
-            
+
     def reverse_geocode(self):
-        """Обратное геокодирование: координаты -> строка"""
         if self.latitude is None or self.longitude is None:
             return
             

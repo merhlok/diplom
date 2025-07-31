@@ -37,7 +37,7 @@ class CommentViewSet(ModelViewSet):
 class LikeView(APIView):
     permission_classes = [IsAuthenticated]
     def _update_likes_count(self, post):
-        return post.likes.count()
+        return post.like.count()
     
     def post(self, request, post_pk):
         post = get_object_or_404(Post, id=post_pk)
