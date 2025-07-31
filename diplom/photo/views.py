@@ -25,16 +25,19 @@ class PostViewSet(ModelViewSet):
 class CommentViewSet(ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializers
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated,IsOwnerOrReadOnly]
     
-    def perform_create(self, serializer,post_pk):
-        post = get_object_or_404(Post, id=post_pk)
+    def perform_create(self, serializer):
+        post_id = self.kwargs['post_pk']
+        post = get_object_or_404(Post, pk=post_id)
         serializer.save(user=self.request.user, post=post)
 
 
 
 class LikeView(APIView):
     permission_classes = [IsAuthenticated]
+    def _update_likes_count(self, post):
+        return post.likes.count()
     
     def post(self, request, post_pk):
         post = get_object_or_404(Post, id=post_pk)
@@ -54,7 +57,7 @@ class LikeView(APIView):
         
         return Response({
             "status": "success",
-            "like_count": post.like.count()
+            "like_count": self._update_likes_count()
         })
 
     def delete(self, request, post_pk):
@@ -69,5 +72,5 @@ class LikeView(APIView):
             
             return Response({
                 "status": "success",
-                "like_count": post.like.count()
+                "like_count": self._update_likes_count()
             })
