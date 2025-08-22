@@ -3,35 +3,36 @@ from django.db import models
 from django.contrib.auth.models import User
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderUnavailable, GeocoderTimedOut
-import time
 
 # Create your models here.
 
 logger = logging.getLogger(__name__)
+
+
 class Post(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='post')
     text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     location_query = models.CharField(
-        max_length=255, 
-        blank=True, 
+        max_length=255,
+        blank=True,
         null=True,
         verbose_name="Поисковый запрос локации"
     )
     latitude = models.FloatField(
-        blank=True, 
+        blank=True,
         null=True,
         verbose_name="Широта"
     )
     longitude = models.FloatField(
-        blank=True, 
+        blank=True,
         null=True,
         verbose_name="Долгота"
     )
     location_name = models.CharField(
-        max_length=255, 
-        blank=True, 
+        max_length=255,
+        blank=True,
         null=True,
         verbose_name="Название локации"
     )
@@ -49,7 +50,6 @@ class Post(models.Model):
             return
         geolocator = Nominatim(user_agent="social_network")
         location = self._geocode(geolocator.geocode, self.location_query)
-        
         if location:
             self.latitude = location.latitude
             self.longitude = location.longitude
@@ -57,19 +57,19 @@ class Post(models.Model):
     def reverse_geocode(self):
         if self.latitude is None or self.longitude is None:
             return
-            
         geolocator = Nominatim(user_agent="social_network")
         location = self._geocode(
-            geolocator.reverse, 
+            geolocator.reverse,
             (self.latitude, self.longitude)
         )
-        
         if location:
             self.location_name = location.address
 
     def save(self, *args, **kwargs):
-        self.geocode_location()
-        self.reverse_geocode()
+        if self.location_query:
+            self.geocode_location()
+        if self.latitude and self.longitude:
+            self.reverse_geocode()
         super().save(*args, **kwargs)
 
 
@@ -82,10 +82,17 @@ class Comment(models.Model):
 
 
 class Like(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE,related_name='like')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='like')
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='like')
     created_at = models.DateTimeField(auto_now_add=True)
-    pass
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'post'],
+                name='unique_like'
+            )
+        ]
 
 
 class ImageModel(models.Model):

@@ -15,16 +15,16 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path,include
-from photo.views import PostViewSet,CommentViewSet,LikeView
-from rest_framework.routers import SimpleRouter
+from django.urls import path, include
+from photo.views import PostViewSet, CommentViewSet, LikeView
+from rest_framework.routers import DefaultRouter
 
-router = SimpleRouter()
+router = DefaultRouter()
 router.register('post', PostViewSet, basename='post')
+router.register(r'post/(?P<post_pk>\d+)/comment', CommentViewSet, basename='comment')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
     path('post/<int:post_pk>/like/', LikeView.as_view()),
-    path('post/<int:post_pk>/comment/', CommentViewSet.as_view({'post': 'create'}))
 ]
